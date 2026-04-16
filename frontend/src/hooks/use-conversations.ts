@@ -43,6 +43,32 @@ export function useConversations() {
   const hasMoreRef = useRef(true);
   const PAGE_SIZE = 30;
 
+  const hydrateChatMessages = useCallback((conversationMessages: ConversationMessage[]) => {
+    const chatStore = useChatStore.getState();
+    chatStore.clearMessages();
+
+    conversationMessages.forEach((msg) => {
+      chatStore.addMessage({
+        id: msg.id,
+        role: msg.role,
+        content: msg.content,
+        timestamp: new Date(msg.created_at),
+        citations: msg.citations,
+        toolCalls: msg.tool_calls?.map((tc) => ({
+          id: tc.tool_call_id,
+          name: tc.tool_name,
+          args: tc.args,
+          result: tc.result,
+          status: tc.status === "failed" ? "error" : tc.status,
+        })),
+        fileIds:
+          "files" in msg && Array.isArray((msg as unknown as { files?: unknown[] }).files)
+            ? ((msg as unknown as { files: { id: string }[] }).files).map((f) => f.id)
+            : undefined,
+      });
+    });
+  }, []);
+
   const fetchConversations = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -62,7 +88,8 @@ export function useConversations() {
           try {
             const msgs = await apiClient.get<MessagesResponse>(`/conversations/${urlId}/messages`);
             setCurrentMessages(msgs.items);
-          } catch {}
+            hydrateChatMessages(msgs.items);
+          } catch { }
         }
       }
     } catch (err) {
@@ -88,7 +115,7 @@ export function useConversations() {
         setConversations([...current, ...response.items]);
       }
       hasMoreRef.current = response.items.length >= PAGE_SIZE;
-    } catch {} finally {
+    } catch { } finally {
       loadingMoreRef.current = false;
     }
   }, [setConversations]);
@@ -137,6 +164,7 @@ export function useConversations() {
           `/conversations/${id}/messages`
         );
         setCurrentMessages(response.items);
+        hydrateChatMessages(response.items);
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to fetch messages";
@@ -145,7 +173,7 @@ export function useConversations() {
         setLoading(false);
       }
     },
-    [setCurrentConversationId, clearMessages, setCurrentMessages, setLoading, setError]
+    [hydrateChatMessages, setCurrentConversationId, clearMessages, setCurrentMessages, setLoading, setError]
   );
 
   const archiveConversation = useCallback(

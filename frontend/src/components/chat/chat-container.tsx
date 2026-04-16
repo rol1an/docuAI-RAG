@@ -6,9 +6,10 @@ import { MessageList } from "./message-list";
 import { ChatInput } from "./chat-input";
 import { ToolApprovalDialog } from "./tool-approval-dialog";
 import { Bot, ChevronDown, Check } from "lucide-react";
+import { Spinner } from "@/components/ui";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui";
 import type { PendingApproval, Decision } from "@/types";
-import { useConversationStore, useChatStore, useAuthStore } from "@/stores";
+import { useConversationStore } from "@/stores";
 import { useConversations } from "@/hooks";
 
 export function ChatContainer() {
@@ -16,8 +17,7 @@ export function ChatContainer() {
 }
 
 function AuthenticatedChatContainer() {
-  const { currentConversationId, currentMessages } = useConversationStore();
-  const { addMessage: addChatMessage } = useChatStore();
+  const { currentConversationId } = useConversationStore();
   const { fetchConversations } = useConversations();
   const prevConversationIdRef = useRef<string | null | undefined>(undefined);
 
@@ -29,6 +29,7 @@ function AuthenticatedChatContainer() {
     messages,
     isConnected,
     isProcessing,
+    processingPhase,
     connect,
     disconnect,
     sendMessage,
@@ -70,31 +71,6 @@ function AuthenticatedChatContainer() {
     prevConversationIdRef.current = currId;
   }, [currentConversationId, clearMessages]);
 
-  // Load messages from conversation store when switching to a saved conversation
-  useEffect(() => {
-    if (currentMessages.length > 0) {
-      clearMessages();
-      currentMessages.forEach((msg) => {
-        addChatMessage({
-          id: msg.id,
-          role: msg.role,
-          content: msg.content,
-          timestamp: new Date(msg.created_at),
-          toolCalls: msg.tool_calls?.map((tc) => ({
-            id: tc.tool_call_id,
-            name: tc.tool_name,
-            args: tc.args,
-            result: tc.result,
-            status: tc.status === "failed" ? "error" : tc.status,
-          })),
-          fileIds: "files" in msg && Array.isArray((msg as unknown as { files?: unknown[] }).files)
-            ? ((msg as unknown as { files: { id: string }[] }).files).map((f) => f.id)
-            : undefined,
-        });
-      });
-    }
-  }, [currentMessages, addChatMessage, clearMessages]);
-
   useEffect(() => {
     connect();
     return () => disconnect();
@@ -109,6 +85,7 @@ function AuthenticatedChatContainer() {
       messages={messages}
       isConnected={isConnected}
       isProcessing={isProcessing}
+      processingPhase={processingPhase}
       sendMessage={sendMessage}
       onModelChange={setModel}
       messagesEndRef={messagesEndRef}
@@ -119,7 +96,7 @@ function AuthenticatedChatContainer() {
 }
 
 function ModelSelector({ onChange }: { onChange: (model: string | null) => void }) {
-  const [availableModels, setAvailableModels] = useState<{value: string; label: string}[]>([
+  const [availableModels, setAvailableModels] = useState<{ value: string; label: string }[]>([
     { value: "", label: "Default" },
   ]);
   const [selected, setSelected] = useState(availableModels[0]);
@@ -137,7 +114,7 @@ function ModelSelector({ onChange }: { onChange: (model: string | null) => void 
           setSelected(models[0]);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   return (
@@ -164,6 +141,7 @@ interface ChatUIProps {
   messages: import("@/types").ChatMessage[];
   isConnected: boolean;
   isProcessing: boolean;
+  processingPhase: "idle" | "searching" | "responding";
   sendMessage: (content: string, fileIds?: string[]) => void;
   onModelChange?: (model: string | null) => void;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
@@ -175,6 +153,7 @@ function ChatUI({
   messages,
   isConnected,
   isProcessing,
+  processingPhase,
   sendMessage,
   onModelChange,
   messagesEndRef,
@@ -199,6 +178,18 @@ function ChatUI({
         )}
         <div ref={messagesEndRef} />
       </div>
+
+      {isProcessing && processingPhase === "searching" && (
+        <div className="px-2 pb-2 sm:px-4 sm:pb-2">
+          <div className="flex items-center gap-3 rounded-xl border bg-card/90 px-4 py-3 text-sm text-muted-foreground shadow-sm">
+            <Spinner className="h-4 w-4 shrink-0" />
+            <div className="min-w-0">
+              <p className="font-medium text-foreground">Retrieving relevant context</p>
+              <p className="text-xs">This usually takes a few seconds.</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Human-in-the-Loop: Tool Approval Dialog */}
       {pendingApproval && onResumeDecisions && (

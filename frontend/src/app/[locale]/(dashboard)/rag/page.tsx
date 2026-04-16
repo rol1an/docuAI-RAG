@@ -107,15 +107,21 @@ export default function RAGPage() {
     finally { setLoading(false); }
   }, []);
 
-  const fetchDocs = async (col: string) => {
+  const fetchDocs = useCallback(async (col: string, silent = false) => {
     if (!col) { setDocs([]); return; }
-    setDocsLoading(true);
+    if (!silent) setDocsLoading(true);
     try {
       const data = await listTrackedDocuments(col);
       setDocs(data.items || []);
-    } catch { setDocs([]); }
-    finally { setDocsLoading(false); }
-  };
+    } catch {
+      if (!silent) {
+        toast.error("Failed to load documents");
+      }
+      setDocs([]);
+    } finally {
+      if (!silent) setDocsLoading(false);
+    }
+  }, []);
 
   const fetchSyncLogs = async () => {
     setSyncLogsLoading(true);
@@ -198,7 +204,22 @@ export default function RAGPage() {
       .then(data => { if (data?.formats) setSupportedFormats(data.formats); })
       .catch(() => {});
   }, [fetchCollections]);
-  useEffect(() => { if (selected) fetchDocs(selected); }, [selected]);
+  useEffect(() => {
+    if (selected) {
+      void fetchDocs(selected);
+    }
+  }, [selected, fetchDocs]);
+
+  useEffect(() => {
+    if (!selected) return;
+    if (!docs.some((d) => d.status === "processing")) return;
+
+    const intervalId = window.setInterval(() => {
+      void fetchDocs(selected, true);
+    }, 3000);
+
+    return () => window.clearInterval(intervalId);
+  }, [selected, docs, fetchDocs]);
 
 
   const handleCreate = async () => {
@@ -393,6 +414,19 @@ export default function RAGPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => void fetchDocs(selected)}
+                  disabled={uploading || docsLoading}
+                >
+                  {docsLoading ? (
+                    <Spinner className="mr-2 h-3.5 w-3.5" />
+                  ) : (
+                    <RefreshCw className="mr-2 h-3.5 w-3.5" />
+                  )}
+                  Refresh
+                </Button>
                 {uploadProgress ? (
                   <div className="flex items-center gap-2 text-xs text-muted-foreground" role="status" aria-live="polite">
                     <Spinner className="h-3.5 w-3.5 text-brand" aria-hidden="true" />
@@ -460,7 +494,7 @@ export default function RAGPage() {
                               <Badge variant="outline" className="text-[10px]">{doc.filetype.toUpperCase()}</Badge>
                               {doc.status === "done" && (
                                 <span className="text-muted-foreground text-xs">
-                                  {(doc.filesize / 1024).toFixed(0)} KB
+                                  {(doc.filesize / 1024).toFixed(0)} KB · {doc.chunk_count} chunks
                                 </span>
                               )}
                               {doc.status === "processing" && <span className="text-brand text-xs">Processing...</span>}

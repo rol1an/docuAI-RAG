@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from app.agents.prompts import get_system_prompt_with_rag
 from app.agents.langchain_assistant import AgentContext, LangChainAssistant, get_agent
 from app.agents.tools.datetime_tool import get_current_datetime
 
@@ -46,7 +47,7 @@ class TestLangChainAssistant:
     def test_init_with_defaults(self):
         """Test LangChainAssistant initializes with defaults."""
         agent = LangChainAssistant()
-        assert agent.system_prompt == "You are a helpful assistant."
+        assert agent.system_prompt == get_system_prompt_with_rag()
         assert agent._agent is None
 
     def test_init_with_custom_values(self):

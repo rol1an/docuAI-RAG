@@ -102,3 +102,4 @@ logs/
 Thumbs.db
 
 # Project specific
+backend/media/

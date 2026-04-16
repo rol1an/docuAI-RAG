@@ -36,6 +36,7 @@ class MockMessage:
         content="Hello",
         model_name=None,
         tokens_used=None,
+        citations=None,
     ):
         self.id = id or uuid4()
         self.conversation_id = conversation_id or uuid4()
@@ -43,6 +44,7 @@ class MockMessage:
         self.content = content
         self.model_name = model_name
         self.tokens_used = tokens_used
+        self.citations = citations or []
 
 
 class MockToolCall:
@@ -256,6 +258,50 @@ class TestConversationServiceCreate:
 
             assert result.title == "Test Conversation"
             mock_repo.create_conversation.assert_called_once()
+
+
+class TestConversationServiceAddMessage:
+    """Tests for add_message."""
+
+    @pytest.fixture
+    def mock_db(self) -> AsyncMock:
+        """Create mock database session."""
+        return AsyncMock()
+
+    @pytest.fixture
+    def service(self, mock_db: AsyncMock) -> ConversationService:
+        """Create ConversationService instance with mock db."""
+        return ConversationService(mock_db)
+
+    @pytest.mark.anyio
+    async def test_add_message_forwards_citations(self, service: ConversationService):
+        """add_message forwards citations into repository persistence."""
+        mock_message = MockMessage()
+        mock_data = MagicMock()
+        mock_data.role = "assistant"
+        mock_data.content = "Final answer"
+        mock_data.model_name = "test-model"
+        mock_data.tokens_used = 42
+        mock_data.citations = [
+            {
+                "doc_id": "doc-1",
+                "filename": "source.pdf",
+                "page_number": 2,
+                "text_snippet": "Relevant excerpt",
+                "score": 0.91,
+            }
+        ]
+
+        with patch("app.services.conversation.conversation_repo") as mock_repo:
+            mock_repo.get_conversation_by_id = AsyncMock(return_value=MockConversation())
+            mock_repo.create_message = AsyncMock(return_value=mock_message)
+
+            result = await service.add_message(uuid4(), mock_data)
+
+            assert result is mock_message
+            mock_repo.create_message.assert_called_once()
+            call_kwargs = mock_repo.create_message.call_args.kwargs
+            assert call_kwargs["citations"] == mock_data.citations
 
 
 class TestConversationServiceUpdate:

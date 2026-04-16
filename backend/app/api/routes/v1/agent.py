@@ -188,6 +188,7 @@ async def agent_websocket(
                 pipeline = _get_rag_pipeline(model_name=selected_model)
 
                 final_output = ""
+                assistant_citations: list[dict[str, Any]] = []
                 await manager.send_event(websocket, "model_request_start", {})
 
                 async for event in pipeline.stream(
@@ -198,6 +199,7 @@ async def agent_websocket(
                     etype = event["type"]
 
                     if etype == "citations":
+                        assistant_citations = list(event["citations"])
                         await manager.send_event(websocket, "citations", {"citations": event["citations"]})
 
                     elif etype == "token":
@@ -215,7 +217,7 @@ async def agent_websocket(
                     conversation_history.append({"role": "assistant", "content": final_output})
 
                 # Persist assistant response
-                if current_conversation_id and final_output:
+                if current_conversation_id and (final_output or assistant_citations):
                     try:
                         async with get_db_context() as db:
                             conv_service = get_conversation_service(db)
@@ -225,6 +227,7 @@ async def agent_websocket(
                                     role="assistant",
                                     content=final_output,
                                     model_name=pipeline.model_name,
+                                    citations=assistant_citations,
                                 ),
                             )
                     except Exception as e:

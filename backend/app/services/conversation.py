@@ -52,6 +52,7 @@ class ConversationService:
                             "role": m.role,
                             "content": m.content,
                             "created_at": m.created_at.isoformat() if m.created_at else None,
+                            "citations": getattr(m, "citations", []) or [],
                             "tool_calls": [
                                 {
                                     "tool_name": tc.tool_name,
@@ -272,6 +273,7 @@ class ConversationService:
             content=data.content,
             model_name=data.model_name,
             tokens_used=data.tokens_used,
+            citations=data.citations,
         )
 
     async def delete_message(self, message_id: UUID) -> bool:

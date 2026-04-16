@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Any, Literal
 from uuid import UUID
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from app.schemas.base import BaseSchema, TimestampSchema
 
@@ -63,6 +63,10 @@ class MessageCreate(MessageBase):
 
     model_name: str | None = Field(default=None, max_length=100, description="AI model used")
     tokens_used: int | None = Field(default=None, ge=0, description="Token count")
+    citations: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Citations for the message",
+    )
 
 
 class MessageFileRead(BaseSchema):
@@ -81,8 +85,16 @@ class MessageRead(MessageBase, TimestampSchema):
     conversation_id: UUID
     model_name: str | None = None
     tokens_used: int | None = None
+    citations: list[dict[str, Any]] = Field(default_factory=list)
     tool_calls: list[ToolCallRead] = Field(default_factory=list)
     files: list[MessageFileRead] = Field(default_factory=list)
+
+    @field_validator("citations", mode="before")
+    @classmethod
+    def _default_empty_citations(cls, value: Any) -> list[dict[str, Any]]:
+        if value is None:
+            return []
+        return value
 
 
 class MessageReadSimple(MessageBase, TimestampSchema):

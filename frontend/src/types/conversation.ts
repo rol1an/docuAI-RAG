@@ -3,6 +3,8 @@
  * Conversation types for AI chat persistence.
  */
 
+import type { Citation } from "./chat";
+
 export interface Conversation {
   id: string;
   user_id?: string;
@@ -20,6 +22,7 @@ export interface ConversationMessage {
   created_at: string;
   model_name?: string;
   tokens_used?: number;
+  citations?: Citation[];
   tool_calls?: ConversationToolCall[];
 }
 

@@ -25,6 +25,7 @@ export function useChat(options: UseChatOptions = {}) {
   } = useChatStore();
 
   const [isProcessing, setIsProcessing] = useState(false);
+  const [processingPhase, setProcessingPhase] = useState<"idle" | "searching" | "responding">("idle");
   const [currentMessageId, setCurrentMessageId] = useState<string | null>(null);
   const currentGroupIdRef = useRef<string | null>(null);
   const messageQueueRef = useRef<{ content: string; fileIds?: string[] }[]>([]);
@@ -77,6 +78,7 @@ export function useChat(options: UseChatOptions = {}) {
 
         case "model_request_start": {
           // PydanticAI/LangChain - create message immediately
+          setProcessingPhase("responding");
           createNewMessage("");
           break;
         }
@@ -90,6 +92,7 @@ export function useChat(options: UseChatOptions = {}) {
 
         case "text_delta": {
           // Append text delta to current message
+          setProcessingPhase("responding");
           if (currentMessageId) {
             const content = (wsEvent.data as { index: number; content: string }).content;
             updateMessage(currentMessageId, (msg) => ({
@@ -102,6 +105,7 @@ export function useChat(options: UseChatOptions = {}) {
 
         // CrewAI agent events - each agent gets its own message container
         case "agent_started": {
+          setProcessingPhase("responding");
           const { agent } = wsEvent.data as {
             agent: string;
             task: string;
@@ -129,6 +133,7 @@ export function useChat(options: UseChatOptions = {}) {
 
         // CrewAI task events - create separate message for each task
         case "task_started": {
+          setProcessingPhase("responding");
           const { description, agent } = wsEvent.data as {
             task_id: string;
             description: string;
@@ -158,6 +163,7 @@ export function useChat(options: UseChatOptions = {}) {
 
         // CrewAI tool events
         case "tool_started": {
+          setProcessingPhase("responding");
           if (currentMessageId) {
             const { tool_name, tool_args, agent } = wsEvent.data as {
               tool_name: string;
@@ -222,6 +228,7 @@ export function useChat(options: UseChatOptions = {}) {
 
         case "tool_call": {
           // Add tool call to current message
+          setProcessingPhase("responding");
           if (currentMessageId) {
             const { tool_name, args, tool_call_id } = wsEvent.data as {
               tool_name: string;
@@ -241,6 +248,7 @@ export function useChat(options: UseChatOptions = {}) {
 
         case "tool_result": {
           // Update tool call with result
+          setProcessingPhase("responding");
           if (currentMessageId) {
             const { tool_call_id, content } = wsEvent.data as {
               tool_call_id: string;
@@ -272,6 +280,7 @@ export function useChat(options: UseChatOptions = {}) {
             }
           }
           setIsProcessing(false);
+          setProcessingPhase("idle");
           setCurrentMessageId(null);
           currentGroupIdRef.current = null;
           break;
@@ -288,6 +297,7 @@ export function useChat(options: UseChatOptions = {}) {
             }));
           }
           setIsProcessing(false);
+          setProcessingPhase("idle");
           break;
         }
 
@@ -322,6 +332,7 @@ export function useChat(options: UseChatOptions = {}) {
 
         case "complete": {
           setIsProcessing(false);
+          setProcessingPhase("idle");
           break;
         }
       }
@@ -346,6 +357,7 @@ export function useChat(options: UseChatOptions = {}) {
         fileIds,
       });
       setIsProcessing(true);
+      setProcessingPhase("searching");
       const payload: Record<string, unknown> = {
         message: content,
         conversation_id: conversationId || null,
@@ -426,6 +438,7 @@ export function useChat(options: UseChatOptions = {}) {
     messages,
     isConnected,
     isProcessing,
+    processingPhase,
     connect,
     disconnect,
     sendMessage: sendChatMessage,
