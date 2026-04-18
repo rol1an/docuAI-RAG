@@ -7,7 +7,8 @@ No agent loop — deterministic and predictable.
 from __future__ import annotations
 
 import logging
-from typing import Any, AsyncGenerator
+from collections.abc import AsyncGenerator
+from typing import Any
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
@@ -111,9 +112,7 @@ class RAGPipeline:
             elif role == "assistant":
                 messages.append(AIMessage(content=content))
         messages.append(
-            HumanMessage(
-                content=_RAG_USER_TEMPLATE.format(context=context, question=question)
-            )
+            HumanMessage(content=_RAG_USER_TEMPLATE.format(context=context, question=question))
         )
         return messages
 

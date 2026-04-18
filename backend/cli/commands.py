@@ -58,8 +58,9 @@ def db_cli():
 @db_cli.command("init")
 def db_init():
     """Initialize the database (run all migrations)."""
-    from alembic import command
     from alembic.config import Config
+
+    from alembic import command
 
     click.echo("Initializing database...")
     alembic_cfg = Config("alembic.ini")
@@ -71,8 +72,9 @@ def db_init():
 @click.option("-m", "--message", required=True, help="Migration message")
 def db_migrate(message: str):
     """Create a new migration."""
-    from alembic import command
     from alembic.config import Config
+
+    from alembic import command
 
     alembic_cfg = Config("alembic.ini")
     command.revision(alembic_cfg, message=message, autogenerate=True)
@@ -83,8 +85,9 @@ def db_migrate(message: str):
 @click.option("--revision", default="head", help="Revision to upgrade to")
 def db_upgrade(revision: str):
     """Run database migrations."""
-    from alembic import command
     from alembic.config import Config
+
+    from alembic import command
 
     alembic_cfg = Config("alembic.ini")
     command.upgrade(alembic_cfg, revision)
@@ -95,8 +98,9 @@ def db_upgrade(revision: str):
 @click.option("--revision", default="-1", help="Revision to downgrade to")
 def db_downgrade(revision: str):
     """Rollback database migrations."""
-    from alembic import command
     from alembic.config import Config
+
+    from alembic import command
 
     alembic_cfg = Config("alembic.ini")
     command.downgrade(alembic_cfg, revision)
@@ -106,8 +110,9 @@ def db_downgrade(revision: str):
 @db_cli.command("current")
 def db_current():
     """Show current migration revision."""
-    from alembic import command
     from alembic.config import Config
+
+    from alembic import command
 
     alembic_cfg = Config("alembic.ini")
     command.current(alembic_cfg)
@@ -116,8 +121,9 @@ def db_current():
 @db_cli.command("history")
 def db_history():
     """Show migration history."""
-    from alembic import command
     from alembic.config import Config
+
+    from alembic import command
 
     alembic_cfg = Config("alembic.ini")
     command.history(alembic_cfg)

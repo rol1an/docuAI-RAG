@@ -253,16 +253,18 @@ async def ingest_file(
     ) -> None:
         """Run ingestion via FastAPI BackgroundTasks."""
         from app.db.session import get_db_context
-        from app.rag.embeddings import EmbeddingService
-        from app.rag.vectorstore import PgVectorStore
         from app.rag.documents import DocumentProcessor
+        from app.rag.embeddings import EmbeddingService
         from app.rag.ingestion import IngestionService
+        from app.rag.vectorstore import PgVectorStore
         from app.services.rag_document import RAGDocumentService
 
         try:
             embedder = EmbeddingService(settings=settings.rag)
             vector_store = PgVectorStore(settings=settings.rag, embedding_service=embedder)
-            svc = IngestionService(processor=DocumentProcessor(settings=settings.rag), vector_store=vector_store)
+            svc = IngestionService(
+                processor=DocumentProcessor(settings=settings.rag), vector_store=vector_store
+            )
             result = await svc.ingest_file(
                 filepath=Path(fpath),
                 collection_name=collection,
@@ -426,15 +428,17 @@ async def trigger_local_sync(
 
     async def _sync_in_background(log_id: str, collection: str, mode: str, path: str) -> None:
         """Run sync via FastAPI BackgroundTasks."""
-        from app.rag.embeddings import EmbeddingService
-        from app.rag.vectorstore import PgVectorStore
         from app.rag.documents import DocumentProcessor
+        from app.rag.embeddings import EmbeddingService
         from app.rag.ingestion import IngestionService
+        from app.rag.vectorstore import PgVectorStore
         from app.services.rag_sync import RAGSyncService
 
         embedder = EmbeddingService(settings=settings.rag)
         vector_store = PgVectorStore(settings=settings.rag, embedding_service=embedder)
-        svc = IngestionService(processor=DocumentProcessor(settings=settings.rag), vector_store=vector_store)
+        svc = IngestionService(
+            processor=DocumentProcessor(settings=settings.rag), vector_store=vector_store
+        )
         ingested = skipped = failed = total = 0
 
         try:
@@ -639,10 +643,10 @@ async def trigger_sync_source(
 
         from app.db.session import get_db_context
         from app.rag.connectors import CONNECTOR_REGISTRY
-        from app.rag.embeddings import EmbeddingService
-        from app.rag.vectorstore import PgVectorStore
         from app.rag.documents import DocumentProcessor
+        from app.rag.embeddings import EmbeddingService
         from app.rag.ingestion import IngestionService
+        from app.rag.vectorstore import PgVectorStore
         from app.services.sync_source import SyncSourceService
 
         async with get_db_context() as bg_db:
@@ -662,7 +666,9 @@ async def trigger_sync_source(
                 files = await connector.list_files(config)
                 _embedder = EmbeddingService(settings=settings.rag)
                 _vstore = PgVectorStore(settings=settings.rag, embedding_service=_embedder)
-                ingestion = IngestionService(processor=DocumentProcessor(settings=settings.rag), vector_store=_vstore)
+                ingestion = IngestionService(
+                    processor=DocumentProcessor(settings=settings.rag), vector_store=_vstore
+                )
                 ingested = failed = 0
                 with tempfile.TemporaryDirectory() as tmp_dir:
                     for f in files:

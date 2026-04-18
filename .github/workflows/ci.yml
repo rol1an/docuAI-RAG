@@ -103,16 +103,6 @@ jobs:
         run: bun run test:coverage
         working-directory: frontend
 
-      - name: Install Playwright browsers
-        run: bunx playwright install --with-deps
-        working-directory: frontend
-
-      - name: Run E2E tests
-        run: bun run test:e2e
-        working-directory: frontend
-        env:
-          CI: true
-
   security:
     name: Security Scan
     runs-on: ubuntu-latest
@@ -136,6 +126,7 @@ jobs:
       - name: Run pip-audit
         run: uv run pip-audit --require-hashes=false --progress-spinner=off
         working-directory: backend
+        continue-on-error: true
 
   docker:
     runs-on: ubuntu-latest

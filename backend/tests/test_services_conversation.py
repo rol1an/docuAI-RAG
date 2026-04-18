@@ -605,8 +605,8 @@ class TestConversationServiceListMessages:
             assert call_kwargs[1]["include_tool_calls"] is True
 
 
-class TestConversationServiceAddMessage:
-    """Tests for add_message."""
+class TestConversationServiceAddMessageExtended:
+    """Tests for add_message — extended scenarios."""
 
     @pytest.fixture
     def mock_db(self) -> AsyncMock:

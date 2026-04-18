@@ -119,7 +119,9 @@ class IngestionService:
 
             action = "replaced" if existing_id else "ingested"
             chunk_count = len(document.chunked_pages or [])
-            logger.info(f"Ingestion complete: {filepath.name}, chunks={chunk_count}, action={action}")
+            logger.info(
+                f"Ingestion complete: {filepath.name}, chunks={chunk_count}, action={action}"
+            )
 
             await self._emit(
                 "rag.document.ingested",

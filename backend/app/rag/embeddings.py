@@ -56,6 +56,7 @@ class OpenAIEmbeddingProvider(BaseEmbeddingProvider):
         """
         self.model = model
         from app.core.config import settings
+
         self.client = OpenAI(
             api_key=settings.OPENAI_API_KEY,
             base_url=settings.OPENAI_BASE_URL or None,

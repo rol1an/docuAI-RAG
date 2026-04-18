@@ -87,7 +87,6 @@ class AgentConnectionManager:
 manager = AgentConnectionManager()
 
 
-
 @router.websocket("/ws/agent")
 async def agent_websocket(
     websocket: WebSocket,
@@ -200,10 +199,14 @@ async def agent_websocket(
 
                     if etype == "citations":
                         assistant_citations = list(event["citations"])
-                        await manager.send_event(websocket, "citations", {"citations": event["citations"]})
+                        await manager.send_event(
+                            websocket, "citations", {"citations": event["citations"]}
+                        )
 
                     elif etype == "token":
-                        await manager.send_event(websocket, "text_delta", {"content": event["content"]})
+                        await manager.send_event(
+                            websocket, "text_delta", {"content": event["content"]}
+                        )
                         final_output += event["content"]
 
                     elif etype == "done":
@@ -233,7 +236,9 @@ async def agent_websocket(
                     except Exception as e:
                         logger.warning(f"Failed to persist assistant response: {e}")
 
-                await manager.send_event(websocket, "complete", {"conversation_id": current_conversation_id})
+                await manager.send_event(
+                    websocket, "complete", {"conversation_id": current_conversation_id}
+                )
 
             except WebSocketDisconnect:
                 logger.info("Client disconnected during RAG pipeline processing")

@@ -4,8 +4,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.agents.prompts import get_system_prompt_with_rag
 from app.agents.langchain_assistant import AgentContext, LangChainAssistant, get_agent
+from app.agents.prompts import get_system_prompt_with_rag
 from app.agents.tools.datetime_tool import get_current_datetime
 
 
