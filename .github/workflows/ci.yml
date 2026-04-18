@@ -22,7 +22,7 @@ jobs:
         run: uv python install 3.11
 
       - name: Install dependencies
-        run: uv sync --directory backend --dev
+        run: uv sync --directory backend --extra dev
 
       - name: Run ruff check
         run: uv run --directory backend ruff check app tests cli
@@ -62,7 +62,7 @@ jobs:
         run: uv python install 3.11
 
       - name: Install dependencies
-        run: uv sync --directory backend --dev
+        run: uv sync --directory backend --extra dev
 
       - name: Run tests
         run: uv run --directory backend pytest tests/ -v --cov=app --cov-report=xml
@@ -118,7 +118,7 @@ jobs:
         run: uv python install 3.11
 
       - name: Install dependencies
-        run: uv sync --directory backend --dev
+        run: uv sync --directory backend --extra dev
 
       - name: Install pip-audit
         run: uv pip install pip-audit
