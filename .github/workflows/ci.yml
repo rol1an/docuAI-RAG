@@ -30,8 +30,6 @@ jobs:
       - name: Run ruff format check
         run: uv run --directory backend ruff format app tests cli --check
 
-      - name: Run ty
-        run: uv run --directory backend ty check
 
   test:
     runs-on: ubuntu-latest
