@@ -120,6 +120,7 @@ jobs:
 
       - name: Install pip-audit
         run: uv pip install pip-audit
+        working-directory: backend
 
       - name: Run pip-audit
         run: uv run pip-audit --require-hashes=false --progress-spinner=off
