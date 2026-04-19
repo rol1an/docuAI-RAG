@@ -23,12 +23,13 @@ export async function POST(request: NextRequest) {
 
     const response = NextResponse.json({ message: "Token refreshed" });
 
-    // Update access token cookie
+    // Update access token cookie — maxAge matches ACCESS_TOKEN_EXPIRE_MINUTES (default 7 days)
+    const accessTokenMaxAge = parseInt(process.env.ACCESS_TOKEN_EXPIRE_MINUTES || "10080", 10) * 60;
     response.cookies.set("access_token", data.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 15, // 15 minutes
+      maxAge: accessTokenMaxAge,
       path: "/",
     });
 
