@@ -50,34 +50,6 @@ export function TriadCard({ structured, citations = [] }: TriadCardProps) {
         style={{ backgroundColor: MORANDI.bgDark, border: `1px solid ${MORANDI.borderDark}` }}
       />
 
-      {/* ── 结论区 ───────────────────────────────────────── */}
-      <div className="relative z-10">
-        <div
-          className="flex items-center gap-2 px-4 py-2.5"
-          style={{ backgroundColor: "rgba(180,160,140,0.12)", borderBottom: `1px solid ${MORANDI.divider}` }}
-        >
-          <span
-            className="flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold text-white"
-            style={{ backgroundColor: MORANDI.badge }}
-          >
-            结
-          </span>
-          <span
-            className="text-xs font-semibold uppercase tracking-widest dark:text-[#d4cbc2]"
-            style={{ color: MORANDI.heading }}
-          >
-            结论
-          </span>
-        </div>
-
-        <p
-          className="px-4 py-3 text-sm leading-relaxed dark:text-[#b8afa8]"
-          style={{ color: MORANDI.text }}
-        >
-          {structured.conclusion}
-        </p>
-      </div>
-
       {/* ── 证据区 ───────────────────────────────────────── */}
       {structured.evidence.length > 0 && (
         <div

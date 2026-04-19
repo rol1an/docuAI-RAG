@@ -99,7 +99,7 @@ export function MessageItem({ message, groupPosition }: MessageItemProps) {
           </div>
         )}
 
-        {/* Message bubble */}
+        {/* Message bubble — when structured parse succeeded, show only conclusion */}
         {message.content && (
           <div className={cn(
             "relative rounded-2xl px-3 py-2 sm:px-4 sm:py-2.5",
@@ -113,7 +113,13 @@ export function MessageItem({ message, groupPosition }: MessageItemProps) {
               </p>
             ) : (
               <div className="text-sm prose-sm max-w-none">
-                <MarkdownContent content={message.content} />
+                <MarkdownContent
+                  content={
+                    message.answerStructured?.parse_success
+                      ? message.answerStructured.conclusion
+                      : message.content
+                  }
+                />
                 {message.isStreaming && (
                   <span className="inline-block w-1.5 h-4 ml-1 bg-current animate-pulse rounded-full" />
                 )}
