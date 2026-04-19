@@ -67,6 +67,10 @@ class MessageCreate(MessageBase):
         default_factory=list,
         description="Citations for the message",
     )
+    answer_structured: dict[str, Any] | None = Field(
+        default=None,
+        description="Parsed triad structure (conclusion / evidence / sources)",
+    )
 
 
 class MessageFileRead(BaseSchema):
@@ -86,6 +90,7 @@ class MessageRead(MessageBase, TimestampSchema):
     model_name: str | None = None
     tokens_used: int | None = None
     citations: list[dict[str, Any]] = Field(default_factory=list)
+    answer_structured: dict[str, Any] | None = None
     tool_calls: list[ToolCallRead] = Field(default_factory=list)
     files: list[MessageFileRead] = Field(default_factory=list)
 

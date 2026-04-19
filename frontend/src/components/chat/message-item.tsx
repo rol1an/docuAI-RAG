@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import type { ChatMessage } from "@/types";
 import { ToolCallCard } from "./tool-call-card";
 import { CitationList } from "./citation-card";
+import { TriadCard } from "./triad-card";
 import { MarkdownContent } from "./markdown-content";
 import { CopyButton } from "./copy-button";
 import { User, Bot } from "lucide-react";
@@ -129,7 +130,18 @@ export function MessageItem({ message, groupPosition }: MessageItemProps) {
           </div>
         )}
 
-        {!isUser && message.citations && message.citations.length > 0 && (
+        {/* Triad card — shown when structured parse succeeded (replaces CitationList) */}
+        {!isUser && message.answerStructured?.parse_success && (
+          <div className="w-full max-w-2xl">
+            <TriadCard
+              structured={message.answerStructured}
+              citations={message.citations}
+            />
+          </div>
+        )}
+
+        {/* Fallback: plain citation list when triad parse failed */}
+        {!isUser && !message.answerStructured?.parse_success && message.citations && message.citations.length > 0 && (
           <div className="w-full max-w-lg">
             <CitationList citations={message.citations} />
           </div>

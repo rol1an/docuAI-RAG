@@ -188,6 +188,7 @@ async def agent_websocket(
 
                 final_output = ""
                 assistant_citations: list[dict[str, Any]] = []
+                answer_structured: dict[str, Any] | None = None
                 await manager.send_event(websocket, "model_request_start", {})
 
                 async for event in pipeline.stream(
@@ -212,6 +213,12 @@ async def agent_websocket(
                     elif etype == "done":
                         final_output = event.get("full_text", final_output)
 
+                    elif etype == "answer_structured":
+                        answer_structured = event.get("structured")
+                        await manager.send_event(
+                            websocket, "answer_structured", {"structured": answer_structured}
+                        )
+
                 await manager.send_event(websocket, "final_result", {"output": final_output})
 
                 # Update in-memory conversation history
@@ -231,6 +238,7 @@ async def agent_websocket(
                                     content=final_output,
                                     model_name=pipeline.model_name,
                                     citations=assistant_citations,
+                                    answer_structured=answer_structured,
                                 ),
                             )
                     except Exception as e:

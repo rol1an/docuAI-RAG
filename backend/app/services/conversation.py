@@ -274,6 +274,7 @@ class ConversationService:
             model_name=data.model_name,
             tokens_used=data.tokens_used,
             citations=data.citations,
+            answer_structured=data.answer_structured,
         )
 
     async def delete_message(self, message_id: UUID) -> bool:

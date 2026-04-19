@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { nanoid } from "nanoid";
 import { useWebSocket } from "./use-websocket";
 import { useChatStore } from "@/stores";
-import type { ChatMessage, Citation, ToolCall, WSEvent, PendingApproval, Decision } from "@/types";
+import type { AnswerStructured, ChatMessage, Citation, ToolCall, WSEvent, PendingApproval, Decision } from "@/types";
 import { WS_URL } from "@/lib/constants";
 import { useConversationStore } from "@/stores";
 interface UseChatOptions {
@@ -222,6 +222,14 @@ export function useChat(options: UseChatOptions = {}) {
           if (currentMessageId) {
             const { citations } = wsEvent.data as { citations: Citation[] };
             updateMessage(currentMessageId, (msg) => ({ ...msg, citations }));
+          }
+          break;
+        }
+
+        case "answer_structured": {
+          if (currentMessageId) {
+            const { structured } = wsEvent.data as { structured: AnswerStructured };
+            updateMessage(currentMessageId, (msg) => ({ ...msg, answerStructured: structured }));
           }
           break;
         }

@@ -10,6 +10,18 @@ export interface Citation {
   page_number: number | null;
   text_snippet: string;
   score: number;
+  confidence?: number;
+}
+
+export interface TriadEvidence {
+  quote: string;
+  citation_index: number; // 0-based index into citations[]
+}
+
+export interface AnswerStructured {
+  parse_success: boolean;
+  conclusion: string;
+  evidence: TriadEvidence[];
 }
 
 export interface ChatMessage {
@@ -19,6 +31,7 @@ export interface ChatMessage {
   timestamp: Date;
   toolCalls?: ToolCall[];
   citations?: Citation[];
+  answerStructured?: AnswerStructured;
   isStreaming?: boolean;
   /** Group ID for related messages (e.g., CrewAI agent chain) */
   groupId?: string;
@@ -51,6 +64,7 @@ export type WSEventType =
   | "complete"
   | "error"
   | "citations"
+  | "answer_structured"
   | "conversation_created"
   | "message_saved"
   // DeepAgents Human-in-the-Loop event

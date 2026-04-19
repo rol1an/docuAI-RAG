@@ -172,6 +172,7 @@ async def create_message(
     model_name: str | None = None,
     tokens_used: int | None = None,
     citations: list[dict[str, Any]] | None = None,
+    answer_structured: dict[str, Any] | None = None,
 ) -> Message:
     """Create a new message."""
     message = Message(
@@ -181,6 +182,7 @@ async def create_message(
         model_name=model_name,
         tokens_used=tokens_used,
         citations=citations or [],
+        answer_structured=answer_structured,
     )
     db.add(message)
     await db.flush()
