@@ -6,7 +6,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 
-from app.api.deps import get_conversation_service, get_current_user_ws
+from app.api.deps import CurrentUser, VectorStoreSvc, get_conversation_service, get_current_user_ws
 from app.db.models.user import User
 from app.db.session import get_db_context
 from app.schemas.conversation import (
@@ -48,6 +48,21 @@ async def list_models() -> dict[str, Any]:
     return {
         "default": settings.AI_MODEL,
         "models": settings.AI_AVAILABLE_MODELS,
+    }
+
+
+@router.get("/agent/collections")
+async def list_collections_for_chat(
+    vector_store: VectorStoreSvc,
+    _: CurrentUser,
+) -> dict[str, Any]:
+    """Return available RAG collections and current default for chat retrieval."""
+    from app.core.config import settings
+
+    items = await vector_store.list_collections()
+    return {
+        "default": settings.RAG_DEFAULT_COLLECTION,
+        "items": items,
     }
 
 

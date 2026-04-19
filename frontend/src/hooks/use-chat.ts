@@ -30,6 +30,7 @@ export function useChat(options: UseChatOptions = {}) {
   const currentGroupIdRef = useRef<string | null>(null);
   const messageQueueRef = useRef<{ content: string; fileIds?: string[] }[]>([]);
   const modelRef = useRef<string | null>(null);
+  const collectionRef = useRef<string | null>(null);
   // Human-in-the-Loop: pending tool approval state
   const [pendingApproval, setPendingApproval] = useState<PendingApproval | null>(null);
 
@@ -372,6 +373,7 @@ export function useChat(options: UseChatOptions = {}) {
       };
       if (fileIds?.length) payload.file_ids = fileIds;
       if (modelRef.current) payload.model = modelRef.current;
+      if (collectionRef.current) payload.collection = collectionRef.current;
       sendMessage(payload);
     },
     [addMessage, sendMessage, conversationId]
@@ -452,6 +454,7 @@ export function useChat(options: UseChatOptions = {}) {
     sendMessage: sendChatMessage,
     clearMessages,
     setModel: (model: string | null) => { modelRef.current = model; },
+    setCollection: (collection: string | null) => { collectionRef.current = collection; },
     // Human-in-the-Loop support
     pendingApproval,
     sendResumeDecisions,

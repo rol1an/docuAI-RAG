@@ -33,7 +33,8 @@ export async function POST(
 
     const data = await response.json();
     return NextResponse.json(data);
-  } catch {
+  } catch (err) {
+    console.error("[ingest] proxy to backend failed:", err);
     return NextResponse.json({ detail: "Internal server error" }, { status: 500 });
   }
 }

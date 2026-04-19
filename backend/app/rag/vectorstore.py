@@ -209,6 +209,16 @@ class PgVectorStore(BaseVectorStore):
     async def get_collection_info(self, collection_name: str) -> CollectionInfo:
         table = self._table(collection_name)
         async with self.async_session() as session:
+            # Check table exists before querying
+            exists_result = await session.execute(
+                text(
+                    "SELECT 1 FROM information_schema.tables "
+                    "WHERE table_name = :t AND table_schema = 'public'"
+                ),
+                {"t": table},
+            )
+            if not exists_result.scalar():
+                return CollectionInfo(name=collection_name, total_vectors=0, dim=self.dim)
             result = await session.execute(text(f"SELECT COUNT(*) FROM {table}"))
             count = result.scalar() or 0
         return CollectionInfo(name=collection_name, total_vectors=count, dim=self.dim)
@@ -248,7 +258,8 @@ class PgVectorStore(BaseVectorStore):
         async with self.async_session() as session:
             result = await session.execute(
                 text(
-                    "SELECT table_name FROM information_schema.tables WHERE table_name LIKE 'rag_%' AND table_schema = 'public'"
+                    "SELECT table_name FROM information_schema.tables "
+                    "WHERE table_name LIKE 'vec_%' AND table_schema = 'public'"
                 )
             )
-            return [row[0].replace("rag_", "") for row in result.fetchall()]
+            return [row[0].replace("vec_", "") for row in result.fetchall()]

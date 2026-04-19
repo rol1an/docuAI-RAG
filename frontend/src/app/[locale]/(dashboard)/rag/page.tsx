@@ -116,8 +116,9 @@ export default function RAGPage() {
     } catch {
       if (!silent) {
         toast.error("Failed to load documents");
+        setDocs([]);
       }
-      setDocs([]);
+      // silent failures keep existing docs intact
     } finally {
       if (!silent) setDocsLoading(false);
     }
@@ -254,10 +255,16 @@ export default function RAGPage() {
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files || !selected) return;
-    e.target.value = "";
-
+    if (!files || files.length === 0) {
+      toast.error("No file received by the browser.");
+      return;
+    }
+    if (!selected) {
+      toast.error("No collection selected. Please select a collection first.");
+      return;
+    }
     const fileList = Array.from(files);
+    e.target.value = "";
     const maxMb = parseInt(process.env.NEXT_PUBLIC_MAX_UPLOAD_SIZE_MB || "50", 10);
     let successCount = 0;
     let errorCount = 0;
@@ -434,7 +441,7 @@ export default function RAGPage() {
                     <span className="max-w-[120px] truncate">{uploadProgress.filename}</span>
                   </div>
                 ) : (
-                  <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()} disabled={uploading}>
+                  <Button size="sm" variant="outline" type="button" onClick={() => fileRef.current?.click()} disabled={uploading}>
                     <Upload className="mr-2 h-3.5 w-3.5" />
                     Upload Files
                   </Button>

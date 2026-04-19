@@ -35,6 +35,7 @@ function AuthenticatedChatContainer() {
     sendMessage,
     clearMessages,
     setModel,
+    setCollection,
     pendingApproval,
     sendResumeDecisions,
   } = useChat({
@@ -88,6 +89,7 @@ function AuthenticatedChatContainer() {
       processingPhase={processingPhase}
       sendMessage={sendMessage}
       onModelChange={setModel}
+      onCollectionChange={setCollection}
       messagesEndRef={messagesEndRef}
       pendingApproval={pendingApproval}
       onResumeDecisions={sendResumeDecisions}
@@ -137,6 +139,49 @@ function ModelSelector({ onChange }: { onChange: (model: string | null) => void 
   );
 }
 
+function CollectionSelector({ onChange }: { onChange: (collection: string | null) => void }) {
+  const [availableCollections, setAvailableCollections] = useState<{ value: string; label: string }[]>([
+    { value: "", label: "Default collection" },
+  ]);
+  const [selected, setSelected] = useState(availableCollections[0]);
+
+  useEffect(() => {
+    fetch("/api/v1/agent/collections", { credentials: "include" })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.items) {
+          const items = Array.isArray(data.items) ? data.items : [];
+          const collections = [
+            { value: "", label: `Default (${data.default || "documents"})` },
+            ...items.map((name: string) => ({ value: name, label: name })),
+          ];
+          setAvailableCollections(collections);
+          setSelected(collections[0]);
+        }
+      })
+      .catch(() => { });
+  }, []);
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors">
+          {selected.label}
+          <ChevronDown className="h-3 w-3" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-52">
+        {availableCollections.map((c) => (
+          <DropdownMenuItem key={c.value || "__default"} onClick={() => { setSelected(c); onChange(c.value || null); }} className="flex items-center justify-between text-xs">
+            {c.label}
+            {selected.value === c.value && <Check className="h-3.5 w-3.5" />}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 interface ChatUIProps {
   messages: import("@/types").ChatMessage[];
   isConnected: boolean;
@@ -144,6 +189,7 @@ interface ChatUIProps {
   processingPhase: "idle" | "searching" | "responding";
   sendMessage: (content: string, fileIds?: string[]) => void;
   onModelChange?: (model: string | null) => void;
+  onCollectionChange?: (collection: string | null) => void;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
   pendingApproval?: PendingApproval | null;
   onResumeDecisions?: (decisions: Decision[]) => void;
@@ -156,6 +202,7 @@ function ChatUI({
   processingPhase,
   sendMessage,
   onModelChange,
+  onCollectionChange,
   messagesEndRef,
   pendingApproval,
   onResumeDecisions,
@@ -213,10 +260,13 @@ function ChatUI({
             />
           </div>
           <div className="flex items-center justify-between px-3 pb-2 sm:px-4 sm:pb-3">
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2">
               <span
                 className={`inline-block h-1.5 w-1.5 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"}`}
               />
+              {onCollectionChange && (
+                <CollectionSelector onChange={onCollectionChange} />
+              )}
             </div>
             {onModelChange && (
               <ModelSelector onChange={onModelChange} />
